@@ -1,1 +1,2 @@
 # Deep-Learning-Project
+This project is a deep learning web application built using Flask for the backend and HTML for the frontend. It integrates core logic written in Python to run and demonstrate both a Multi-Layer Perceptron (MLP) and a Convolutional Neural Network (CNN). Users can interact with the web interface to input data and view predictions or results from the trained models. It showcases how deep learning models can be deployed in a simple, user-friendly web app.
