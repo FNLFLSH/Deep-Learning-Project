@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CNN Model</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>CNN Model</h1>
+        <p>Click the button below to train and test the CNN model</p>
+        
+        <button id="runButton" class="run-button">Run CNN Model</button>
+        
+        <div id="loadingBox" class="loading-box" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>Loading... Model training and testing in progress</p>
+        </div>
+        
+        <div id="resultBox" class="result-box" style="display: none;">
+            <h2>Results</h2>
+            <div id="resultContent"></div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="{{ url_for('index') }}" class="back-link">Back to Home</a>
+        </div>
+    </div>
+    
+    <script>
+        $(document).ready(function() {
+            // Check initial status
+            checkStatus();
+            
+            // Run button click handler
+            $("#runButton").click(function() {
+                $("#loadingBox").show();
+                $("#resultBox").hide();
+                
+                $.ajax({
+                    url: "/run_cnn",
+                    type: "POST",
+                    success: function(response) {
+                        if (response.status === "complete") {
+                            showResults(response.result);
+                        } else {
+                            // If just started or running, poll for updates
+                            pollStatus();
+                        }
+                    }
+                });
+            });
+            
+            function checkStatus() {
+                $.ajax({
+                    url: "/check_cnn_status",
+                    type: "GET",
+                    success: function(response) {
+                        if (response.status === "running") {
+                            $("#loadingBox").show();
+                            $("#resultBox").hide();
+                            pollStatus();
+                        } else if (response.status === "complete") {
+                            showResults(response.result);
+                        }
+                    }
+                });
+            }
+            
+            function pollStatus() {
+                setTimeout(function() {
+                    $.ajax({
+                        url: "/check_cnn_status",
+                        type: "GET",
+                        success: function(response) {
+                            if (response.status === "running") {
+                                // Still running, poll again
+                                pollStatus();
+                            } else if (response.status === "complete") {
+                                showResults(response.result);
+                            }
+                        }
+                    });
+                }, 1000); // Poll every second
+            }
+            
+            function showResults(result) {
+                $("#loadingBox").hide();
+                $("#resultBox").show();
+                
+                let content = `
+                    <p><strong>Model Type:</strong> ${result.model_type}</p>
+                    <p><strong>Accuracy:</strong> ${(result.accuracy * 100).toFixed(2)}%</p>
+                    <p><strong>Epochs:</strong> ${result.epochs}</p>
+                `;
+                
+                $("#resultContent").html(content);
+            }
+        });
+    </script>
+</body>
+</html> 
